@@ -7,6 +7,8 @@ class SteamAPI:
 
     def __init__(self):
         self.api_key = os.getenv("STEAM_API_KEY")
+        # Estimated time to avoid being blocked by the Steam API (200 requests / 5 min)
+        self.wait_time_between_calls = 1.5
 
     def get_all_games(self) -> list[dict]:
         """Returns a list of all game of the Steam store with their name and id """
@@ -48,7 +50,7 @@ class SteamAPI:
 
         return games
 
-    def get_reviews_overview(self, game_id: str) -> dict[str, int]:
+    def get_reviews_summary(self, game_id: str) -> dict:
         """Returns the number of positive, negative and overall reviews for a game."""
 
         params = {
@@ -56,20 +58,33 @@ class SteamAPI:
             'key': self.api_key,
             'language': "english",
             'filter_offtopic_activity': 0,
-            # for the overview, we avoid fetching unnecessary reviews
+            # for the summary, we avoid fetching unnecessary reviews
             'num_per_page': 0,
         }
         url = f"https://store.steampowered.com/appreviews/{game_id}"
         response = requests.get(url, params=params)
         data = response.json()
 
-        overview = data.get("query_summary", {})
+        summary = data.get("query_summary", {})
 
-        overview_keys = ["total_positive", "total_negative", "total_reviews"]
-        if overview:
-            overview = {key: overview.get(key, 0) for key in overview_keys}
+        summary_keys = ["total_positive", "total_negative", "total_reviews"]
+        if summary:
+            summary = {key: summary.get(key, 0) for key in summary_keys}
+        summary["id"] = game_id
 
-        return overview
+        return summary
+
+    def get_reviews_summaries(self, game_ids: list) -> list:
+        """Returns the number of positive, negative and overall reviews for a list of games."""
+
+        summaries = []
+        for id in game_ids:
+            summary = self.get_reviews_summary(id)
+            summaries.append(summary)
+
+            time.sleep(self.wait_time_between_calls)
+
+        return summaries
 
     def get_reviews(self,
                     game_id: str,
@@ -105,8 +120,7 @@ class SteamAPI:
 
             reviews.extend([review["review"] for review in new_reviews])
             cursor = data["cursor"]
-            # Estimated time to avoid being blocked by the Steam API (200 requests / 5 min)
-            wait_time = 1.5
-            time.sleep(wait_time)
+
+            time.sleep(self.wait_time_between_calls)
 
         return reviews
