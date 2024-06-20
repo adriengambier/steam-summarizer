@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Adrien Gambier <adriengambier.pro@gmail.com>"]
 readme = "README.md"
-packages = [{include = "steam_summarizer"}]
+packages = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
