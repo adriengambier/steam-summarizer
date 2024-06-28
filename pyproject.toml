@@ -10,7 +10,8 @@ python = "^3.10"
 pandas = "^2.2.2"
 streamlit = "^1.35.0"
 requests = "^2.32.3"
-
+thefuzz = "^0.22.1"
+streamlit-antd-components = "^0.3.2"
 
 [build-system]
 requires = ["poetry-core"]
